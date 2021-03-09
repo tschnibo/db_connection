@@ -1,12 +1,12 @@
-defmodule DBConnection.SojournError do
+defmodule DBConnLegacy.SojournError do
   defexception [:message]
 
-  def exception(message), do: %DBConnection.SojournError{message: message}
+  def exception(message), do: %DBConnLegacy.SojournError{message: message}
 end
 
-defmodule DBConnection.Sojourn do
+defmodule DBConnLegacy.Sojourn do
   @moduledoc """
-  A `DBConnection.Pool` using sbroker.
+  A `DBConnLegacy.Pool` using sbroker.
 
   ### Options
 
@@ -14,11 +14,11 @@ defmodule DBConnection.Sojourn do
     * `:pool_overflow` - The number of extra connections that can be created if
     required (default: `0`)
     * `:broker` - The `:sbroker` callback module (see `:sbroker`,
-    default: `DBConnection.Sojourn.Broker`)
+    default: `DBConnLegacy.Sojourn.Broker`)
     * `:broker_start_opt` - Start options for the broker (see
     `:sbroker`, default: `[]`)
     * `:regulator` - The `:sregulator` callback module (see `:sregulator`,
-    default: `DBConnection.Sojourn.Regulator`)
+    default: `DBConnLegacy.Sojourn.Regulator`)
     * `:regulator_start_opt` - Start options for the regulator (see
     `:sregulator`, default; `[]`)
     * `:max_restarts` - the maximum amount of connection restarts allowed in a
@@ -33,9 +33,9 @@ defmodule DBConnection.Sojourn do
   or spreads out pings evenly.
   """
 
-  @behaviour  DBConnection.Pool
+  @behaviour  DBConnLegacy.Pool
 
-  @broker DBConnection.Sojourn.Broker
+  @broker DBConnLegacy.Sojourn.Broker
   @timeout 15_000
 
   import Supervisor.Spec
@@ -62,23 +62,23 @@ defmodule DBConnection.Sojourn do
         {:ok, {pid, ref}, mod, state}
       :drop ->
         message = "connection not available and queuing is disabled"
-        {:error, DBConnection.ConnectionError.exception(message)}
+        {:error, DBConnLegacy.ConnectionError.exception(message)}
       {:drop, wait} ->
         wait = :erlang.convert_time_unit(wait, :native, :milli_seconds)
         message = "connection not available " <>
         "and request was dropped from queue after #{wait}ms"
-        {:error, DBConnection.ConnectionError.exception(message)}
+        {:error, DBConnLegacy.ConnectionError.exception(message)}
     end
   end
 
   @doc false
-  defdelegate checkin(ref, state, opts), to: DBConnection.Connection
+  defdelegate checkin(ref, state, opts), to: DBConnLegacy.Connection
 
   @doc false
-  defdelegate disconnect(ref, err, state, opts), to: DBConnection.Connection
+  defdelegate disconnect(ref, err, state, opts), to: DBConnLegacy.Connection
 
   @doc false
-  defdelegate stop(ref, err, state, opts), to: DBConnection.Connection
+  defdelegate stop(ref, err, state, opts), to: DBConnLegacy.Connection
 
   ## Helpers
 

@@ -13,12 +13,12 @@ defmodule TestProtector do
     {:ok, pool} = P.start_link(opts)
 
     P.run(pool, fn(_) ->
-        assert_raise DBConnection.ConnectionError,
+        assert_raise DBConnLegacy.ConnectionError,
           fn() -> P.run(pool, fn(_) -> :ok end) end
 
         :timer.sleep(200)
 
-        assert_raise DBConnection.ConnectionError, ~r"after 0ms",
+        assert_raise DBConnLegacy.ConnectionError, ~r"after 0ms",
           fn() -> P.run(pool, fn(_) -> :ok end, [protector: true]) end
     end)
 

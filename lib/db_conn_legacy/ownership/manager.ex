@@ -1,18 +1,18 @@
-defmodule DBConnection.Ownership.Manager do
+defmodule DBConnLegacy.Ownership.Manager do
   @moduledoc false
   use GenServer
   require Logger
 
-  alias DBConnection.Ownership.PoolSupervisor
-  alias DBConnection.Ownership.ProxySupervisor
-  alias DBConnection.Ownership.Proxy
+  alias DBConnLegacy.Ownership.PoolSupervisor
+  alias DBConnLegacy.Ownership.ProxySupervisor
+  alias DBConnLegacy.Ownership.Proxy
 
   @timeout 5_000
 
   @callback start_link(module, opts :: Keyword.t) ::
     GenServer.on_start
   def start_link(module, opts) do
-    pool_mod = Keyword.get(opts, :ownership_pool, DBConnection.Poolboy)
+    pool_mod = Keyword.get(opts, :ownership_pool, DBConnLegacy.Poolboy)
     {owner_opts, pool_opts} = Keyword.split(opts, [:name])
     GenServer.start_link(__MODULE__, {module, owner_opts, pool_mod, pool_opts}, owner_opts)
   end

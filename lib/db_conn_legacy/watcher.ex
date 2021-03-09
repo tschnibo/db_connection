@@ -1,4 +1,4 @@
-defmodule DBConnection.Watcher do
+defmodule DBConnLegacy.Watcher do
   @moduledoc false
 
   use GenServer

@@ -1,6 +1,6 @@
-defmodule DBConnection.Poolboy do
+defmodule DBConnLegacy.Poolboy do
   @moduledoc """
-  A `DBConnection.Pool` using poolboy.
+  A `DBConnLegacy.Pool` using poolboy.
 
   ### Options
 
@@ -11,7 +11,7 @@ defmodule DBConnection.Poolboy do
     LIFO queue (default: `:out`)
   """
 
-  @behaviour DBConnection.Pool
+  @behaviour DBConnLegacy.Pool
 
   @pool_timeout 5000
 
@@ -41,7 +41,7 @@ defmodule DBConnection.Poolboy do
     case :poolboy.checkout(pool, queue?, pool_timeout) do
       :full ->
         message = "connection not available and queuing is disabled"
-        err = DBConnection.ConnectionError.exception(message)
+        err = DBConnLegacy.ConnectionError.exception(message)
         {:error, err}
       worker ->
         checkout(pool, worker, opts)
@@ -50,13 +50,13 @@ defmodule DBConnection.Poolboy do
 
   @doc false
   def checkin({pool, worker, worker_ref}, state, opts) do
-    DBConnection.Connection.checkin(worker_ref, state, opts)
+    DBConnLegacy.Connection.checkin(worker_ref, state, opts)
     :poolboy.checkin(pool, worker)
   end
 
   @doc false
   def disconnect({pool, worker, worker_ref}, err, state, opts) do
-    DBConnection.Connection.disconnect(worker_ref, err, state, opts)
+    DBConnLegacy.Connection.disconnect(worker_ref, err, state, opts)
     :poolboy.checkin(pool, worker)
   end
 
@@ -66,7 +66,7 @@ defmodule DBConnection.Poolboy do
     # about to exit as it can cause a client to get a worker thats about
     # to exit.
     try do
-      DBConnection.Connection.sync_stop(worker_ref, err, state, opts)
+      DBConnLegacy.Connection.sync_stop(worker_ref, err, state, opts)
     after
       :poolboy.checkin(pool, worker)
     end
@@ -78,7 +78,7 @@ defmodule DBConnection.Poolboy do
     pool_opts = [strategy: strategy(opts),
                  size: Keyword.get(opts, :pool_size, 10),
                  max_overflow: Keyword.get(opts, :pool_overflow, 0),
-                 worker_module: DBConnection.Poolboy.Worker]
+                 worker_module: DBConnLegacy.Poolboy.Worker]
     {name_opts(opts) ++ pool_opts, {mod, opts}}
   end
 
@@ -99,7 +99,7 @@ defmodule DBConnection.Poolboy do
 
   defp checkout(pool, worker, opts) do
     try do
-      DBConnection.Connection.checkout(worker, opts)
+      DBConnLegacy.Connection.checkout(worker, opts)
     else
       {:ok, worker_ref, mod, state} ->
         {:ok, {pool, worker, worker_ref}, mod, state}

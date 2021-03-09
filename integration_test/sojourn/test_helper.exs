@@ -1,7 +1,7 @@
 Code.require_file "../../test/test_support.exs", __DIR__
 
 defmodule TestPool do
-  use TestConnection, [pool: DBConnection.Sojourn, pool_size: 1,
+  use TestConnection, [pool: DBConnLegacy.Sojourn, pool_size: 1,
     protector: false]
 end
 

@@ -18,12 +18,12 @@ defmodule TransactionTest do
     {:ok, pool} = P.start_link(opts)
 
     assert P.transaction(pool, fn(conn) ->
-      assert %DBConnection{} = conn
+      assert %DBConnLegacy{} = conn
       :result
     end) == {:ok, :result}
 
     assert P.transaction(pool, fn(conn) ->
-      assert %DBConnection{} = conn
+      assert %DBConnLegacy{} = conn
       :result
     end, [key: :value]) == {:ok, :result}
 
@@ -52,7 +52,7 @@ defmodule TransactionTest do
     log = &send(parent, &1)
 
     assert P.transaction(pool, fn(_) ->
-      assert_received %DBConnection.LogEntry{call: :transaction} = entry
+      assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
       assert %{query: :begin, params: nil, result: {:ok, :began}} = entry
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
@@ -63,7 +63,7 @@ defmodule TransactionTest do
       :result
     end, [log: log]) == {:ok, :result}
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :commit, params: nil, result: {:ok, :committed}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
@@ -71,11 +71,11 @@ defmodule TransactionTest do
     assert is_nil(entry.decode_time)
 
     assert P.transaction(pool, fn(conn) ->
-      assert_received %DBConnection.LogEntry{}
+      assert_received %DBConnLegacy.LogEntry{}
       P.rollback(conn, :result)
     end, [log: log]) == {:error, :result}
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :rollback, params: nil, result: {:ok, :rolledback}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
@@ -135,7 +135,7 @@ defmodule TransactionTest do
         P.rollback(conn2, :oops)
       end) == {:error, :oops}
 
-      assert_raise DBConnection.ConnectionError, "transaction rolling back",
+      assert_raise DBConnLegacy.ConnectionError, "transaction rolling back",
         fn() -> P.transaction(conn, fn(_) -> nil end) end
     end) == {:error, :rollback}
 
@@ -197,7 +197,7 @@ defmodule TransactionTest do
       assert_raise RuntimeError, "oops",
        fn() -> P.transaction(conn, fn(_) -> raise "oops" end) end
 
-      assert_raise DBConnection.ConnectionError, "transaction rolling back",
+      assert_raise DBConnLegacy.ConnectionError, "transaction rolling back",
         fn() -> P.transaction(conn, fn(_) -> nil end) end
     end) == {:error, :rollback}
 
@@ -224,7 +224,7 @@ defmodule TransactionTest do
 
     assert P.transaction(pool, fn(conn) ->
       assert P.transaction(conn, fn(conn2) ->
-        assert %DBConnection{} = conn2
+        assert %DBConnLegacy{} = conn2
         assert conn == conn2
         :result
       end) == {:ok, :result}
@@ -250,7 +250,7 @@ defmodule TransactionTest do
 
     assert P.transaction(pool, fn(conn) ->
       assert P.run(conn, fn(conn2) ->
-        assert %DBConnection{} = conn2
+        assert %DBConnLegacy{} = conn2
         assert conn == conn2
         :result
       end) == :result
@@ -306,7 +306,7 @@ defmodule TransactionTest do
         P.transaction(pool, fn(_) -> flunk("transaction ran") end, [log: log])
       end
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :begin, params: nil, result: {:error, ^err}} = entry
     assert is_integer(entry.pool_time)
     assert entry.pool_time >= 0
@@ -343,15 +343,15 @@ defmodule TransactionTest do
         P.transaction(pool, fn(_) -> flunk("transaction ran") end, [log: log])
       end
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :begin, params: nil, result: {:error, err}} = entry
-    assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+    assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
     assert is_integer(entry.pool_time)
     assert entry.pool_time >= 0
     assert is_integer(entry.connection_time)
     assert entry.connection_time >= 0
     assert is_nil(entry.decode_time)
-    assert_receive {:EXIT, _, {%DBConnection.ConnectionError{}, [_|_]}}
+    assert_receive {:EXIT, _, {%DBConnLegacy.ConnectionError{}, [_|_]}}
 
     assert [
       {:connect, [_]},
@@ -403,14 +403,14 @@ defmodule TransactionTest do
     assert_receive {:hi, conn}
 
     Process.flag(:trap_exit, true)
-    assert_raise DBConnection.ConnectionError, "bad return value: :oops",
+    assert_raise DBConnLegacy.ConnectionError, "bad return value: :oops",
       fn() -> P.transaction(pool, fn(_) -> flunk("transaction ran") end) end
 
     prefix = "client #{inspect self()} stopped: " <>
-      "** (DBConnection.ConnectionError) bad return value: :oops"
+      "** (DBConnLegacy.ConnectionError) bad return value: :oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
         [_|_]}}
 
     assert [
@@ -443,7 +443,7 @@ defmodule TransactionTest do
     prefix = "client #{inspect self()} stopped: ** (RuntimeError) oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
        [_|_]}}
 
     assert [
@@ -496,11 +496,11 @@ defmodule TransactionTest do
     assert_raise RuntimeError, "oops",
       fn() ->
         P.transaction(pool, fn(_) ->
-          assert_received %DBConnection.LogEntry{}
+          assert_received %DBConnLegacy.LogEntry{}
         end, [log: log])
       end
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :commit, params: nil, result: {:error, ^err}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
@@ -561,14 +561,14 @@ defmodule TransactionTest do
     assert_receive {:hi, conn}
 
     Process.flag(:trap_exit, true)
-    assert_raise DBConnection.ConnectionError, "bad return value: :oops",
+    assert_raise DBConnLegacy.ConnectionError, "bad return value: :oops",
       fn() -> P.transaction(pool, fn(_) -> :result end) end
 
     prefix = "client #{inspect self()} stopped: " <>
-      "** (DBConnection.ConnectionError) bad return value: :oops"
+      "** (DBConnLegacy.ConnectionError) bad return value: :oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
         [_|_]}}
 
     assert [
@@ -603,7 +603,7 @@ defmodule TransactionTest do
     prefix = "client #{inspect self()} stopped: ** (RuntimeError) oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
        [_|_]}}
 
     assert [
@@ -637,17 +637,17 @@ defmodule TransactionTest do
         P.transaction(pool, fn(_) -> :ok end, [log: log])
       end
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :begin, params: nil, result: {:ok, :began}} = entry
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :commit, params: nil, result: {:error, err}} = entry
-    assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+    assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
     assert entry.connection_time >= 0
     assert is_nil(entry.decode_time)
-    assert_receive {:EXIT, _, {%DBConnection.ConnectionError{}, [_|_]}}
+    assert_receive {:EXIT, _, {%DBConnLegacy.ConnectionError{}, [_|_]}}
 
     assert [
       {:connect, [_]},
@@ -727,17 +727,17 @@ defmodule TransactionTest do
         P.transaction(pool, &P.rollback(&1, :oops), [log: log])
       end
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :begin, params: nil, result: {:ok, :began}} = entry
 
-    assert_received %DBConnection.LogEntry{call: :transaction} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :transaction} = entry
     assert %{query: :rollback, params: nil, result: {:error, err}} = entry
-    assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+    assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
     assert entry.connection_time >= 0
     assert is_nil(entry.decode_time)
-    assert_receive {:EXIT, _, {%DBConnection.ConnectionError{}, [_|_]}}
+    assert_receive {:EXIT, _, {%DBConnLegacy.ConnectionError{}, [_|_]}}
 
     assert [
       {:connect, [_]},
@@ -762,13 +762,13 @@ defmodule TransactionTest do
     assert_raise RuntimeError, "oops",
       fn() ->
         P.transaction(pool, fn(_) ->
-          assert_received %DBConnection.LogEntry{call: :transaction,
+          assert_received %DBConnLegacy.LogEntry{call: :transaction,
             query: :begin}
           raise "oops"
         end, [log: log])
       end
 
-    assert_received %DBConnection.LogEntry{call: :transaction, query: :rollback}
+    assert_received %DBConnLegacy.LogEntry{call: :transaction, query: :rollback}
 
     assert [
       connect: [_],

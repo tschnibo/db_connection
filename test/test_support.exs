@@ -3,7 +3,7 @@ defmodule TestConnection do
   defmacro __using__(opts) do
     quote do
       def ensure_all_started do
-        DBConnection.ensure_all_started(unquote(opts))
+        DBConnLegacy.ensure_all_started(unquote(opts))
       end
 
       def start_link(opts2) do
@@ -12,62 +12,62 @@ defmodule TestConnection do
       end
 
       def run(pool, fun, opts2 \\ []) do
-        DBConnection.run(pool, fun, opts2 ++ unquote(opts))
+        DBConnLegacy.run(pool, fun, opts2 ++ unquote(opts))
       end
 
       def transaction(pool, fun, opts2 \\ []) do
-        DBConnection.transaction(pool, fun, opts2 ++ unquote(opts))
+        DBConnLegacy.transaction(pool, fun, opts2 ++ unquote(opts))
       end
 
-      defdelegate rollback(conn, reason), to: DBConnection
+      defdelegate rollback(conn, reason), to: DBConnLegacy
 
       def prepare(pool, query, opts2 \\ []) do
-        DBConnection.prepare(pool, query, opts2 ++ unquote(opts))
+        DBConnLegacy.prepare(pool, query, opts2 ++ unquote(opts))
       end
 
       def prepare!(pool, query, opts2 \\ []) do
-        DBConnection.prepare!(pool, query, opts2 ++ unquote(opts))
+        DBConnLegacy.prepare!(pool, query, opts2 ++ unquote(opts))
       end
 
       def prepare_execute(pool, query, params, opts2 \\ []) do
-        DBConnection.prepare_execute(pool, query, params,
+        DBConnLegacy.prepare_execute(pool, query, params,
           opts2 ++ unquote(opts))
       end
 
       def prepare_execute!(pool, query, params, opts2 \\ []) do
-        DBConnection.prepare_execute!(pool, query, params,
+        DBConnLegacy.prepare_execute!(pool, query, params,
           opts2 ++ unquote(opts))
       end
 
       def execute(pool, query, params, opts2 \\ []) do
-        DBConnection.execute(pool, query, params, opts2 ++ unquote(opts))
+        DBConnLegacy.execute(pool, query, params, opts2 ++ unquote(opts))
       end
 
       def execute!(pool, query, params, opts2 \\ []) do
-        DBConnection.execute!(pool, query, params, opts2 ++ unquote(opts))
+        DBConnLegacy.execute!(pool, query, params, opts2 ++ unquote(opts))
       end
 
       def stream(conn, query, params, opts2 \\ []) do
-        DBConnection.stream(conn, query, params, opts2 ++ unquote(opts))
+        DBConnLegacy.stream(conn, query, params, opts2 ++ unquote(opts))
       end
 
       def prepare_stream(conn, query, params, opts2 \\ []) do
-        DBConnection.prepare_stream(conn, query, params, opts2 ++ unquote(opts))
+        DBConnLegacy.prepare_stream(conn, query, params, opts2 ++ unquote(opts))
       end
 
       def close(pool, query, opts2 \\ []) do
-        DBConnection.close(pool, query, opts2 ++ unquote(opts))
+        DBConnLegacy.close(pool, query, opts2 ++ unquote(opts))
       end
 
       def close!(pool, query, opts2 \\ []) do
-        DBConnection.close!(pool, query, opts2 ++ unquote(opts))
+        DBConnLegacy.close!(pool, query, opts2 ++ unquote(opts))
       end
 
       defoverridable [start_link: 1]
     end
   end
 
-  def start_link(opts), do: DBConnection.start_link(__MODULE__, opts)
+  def start_link(opts), do: DBConnLegacy.start_link(__MODULE__, opts)
 
   def connect(opts) do
     agent = Keyword.fetch!(opts, :agent)
@@ -149,7 +149,7 @@ defmodule TestResult do
   defstruct []
 end
 
-defimpl DBConnection.Query, for: TestQuery do
+defimpl DBConnLegacy.Query, for: TestQuery do
   def parse(query, opts) do
     parse = Keyword.get(opts, :parse, &(&1))
     parse.(query)

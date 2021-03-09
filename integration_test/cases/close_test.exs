@@ -36,7 +36,7 @@ defmodule CloseTest do
     {:ok, pool} = P.start_link(opts)
 
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :close, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :close, query: %Q{},
                                     params: nil, result: {:ok, :result}} = entry
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
@@ -83,7 +83,7 @@ defmodule CloseTest do
     {:ok, pool} = P.start_link(opts)
 
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :close, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :close, query: %Q{},
                                     params: nil, result: {:error, ^err}} = entry
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
@@ -119,9 +119,9 @@ defmodule CloseTest do
     {:ok, pool} = P.start_link(opts)
 
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :close, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :close, query: %Q{},
                                     params: nil, result: {:error, err}} = entry
-      assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+      assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
       assert is_integer(entry.connection_time)
@@ -131,7 +131,7 @@ defmodule CloseTest do
     end
     assert_raise RuntimeError, "oops", fn() -> P.close(pool, %Q{}, [log: log]) end
     assert_received :logged
-    assert_receive {:EXIT, _, {%DBConnection.ConnectionError{}, [_|_]}}
+    assert_receive {:EXIT, _, {%DBConnLegacy.ConnectionError{}, [_|_]}}
 
     assert [
       {:connect, [_]},

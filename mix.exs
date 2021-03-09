@@ -1,11 +1,11 @@
-defmodule DBConnection.Mixfile do
+defmodule DBConnLegacy.Mixfile do
   use Mix.Project
 
   @pools [:connection, :poolboy, :sojourn, :ownership]
   @version "1.1.3"
 
   def project do
-    [app: :db_connection,
+    [app: :db_conn_legacy,
      version: @version,
      elixir: "~> 1.2",
      deps: deps(),
@@ -23,7 +23,7 @@ defmodule DBConnection.Mixfile do
 
   def application do
     [applications: [:logger, :connection],
-     mod: {DBConnection.App, []}]
+     mod: {DBConnLegacy.App, []}]
   end
 
   defp deps do
@@ -34,9 +34,9 @@ defmodule DBConnection.Mixfile do
   end
 
   defp docs do
-    [source_url: "https://github.com/elixir-ecto/db_connection",
+    [source_url: "https://github.com/elixir-ecto/db_conn_legacy",
      source_ref: "v#{@version}",
-     main: DBConnection]
+     main: DBConnLegacy]
   end
 
   defp description do
@@ -48,7 +48,7 @@ defmodule DBConnection.Mixfile do
   defp package do
     %{licenses: ["Apache 2.0"],
       maintainers: ["James Fish"],
-      links: %{"Github" => "https://github.com/elixir-ecto/db_connection"}}
+      links: %{"Github" => "https://github.com/elixir-ecto/db_conn_legacy"}}
   end
 
   defp test_paths(pool) when pool in @pools, do: ["integration_test/#{pool}"]

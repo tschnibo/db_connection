@@ -1,45 +1,45 @@
-defmodule DBConnection.Stream do
+defmodule DBConnLegacy.Stream do
   defstruct [:conn, :query, :params, :opts]
 
-  @type t :: %__MODULE__{conn: DBConnection.conn,
+  @type t :: %__MODULE__{conn: DBConnLegacy.conn,
                          query: any,
                          params: any,
                          opts: Keyword.t}
 end
-defimpl Enumerable, for: DBConnection.Stream do
+defimpl Enumerable, for: DBConnLegacy.Stream do
   def count(_), do: {:error, __MODULE__}
 
   def member?(_, _), do: {:error, __MODULE__}
 
   def slice(_), do: {:error, __MODULE__}
 
-  def reduce(stream, acc, fun), do: DBConnection.reduce(stream, acc, fun)
+  def reduce(stream, acc, fun), do: DBConnLegacy.reduce(stream, acc, fun)
 end
 
-defmodule DBConnection.PrepareStream do
+defmodule DBConnLegacy.PrepareStream do
   defstruct [:conn, :query, :params, :opts]
 
-  @type t :: %__MODULE__{conn: DBConnection.conn,
+  @type t :: %__MODULE__{conn: DBConnLegacy.conn,
                          query: any,
                          params: any,
                          opts: Keyword.t}
 end
-defimpl Enumerable, for: DBConnection.PrepareStream do
+defimpl Enumerable, for: DBConnLegacy.PrepareStream do
   def count(_), do: {:error, __MODULE__}
 
   def member?(_, _), do: {:error, __MODULE__}
 
   def slice(_), do: {:error, __MODULE__}
 
-  def reduce(stream, acc, fun), do: DBConnection.reduce(stream, acc, fun)
+  def reduce(stream, acc, fun), do: DBConnLegacy.reduce(stream, acc, fun)
 end
 
-defmodule DBConnection do
+defmodule DBConnLegacy do
   @moduledoc """
   A behaviour module for implementing efficient database connection
   client processes, pools and transactions.
 
-  `DBConnection` handles callbacks differently to most behaviours. Some
+  `DBConnLegacy` handles callbacks differently to most behaviours. Some
   callbacks will be called in the calling process, with the state
   copied to and from the calling process. This is useful when the data
   for a request is large and means that a calling process can interact
@@ -66,11 +66,11 @@ defmodule DBConnection do
   (configurable) exponential random backoff to reconnect. All state is
   lost when a connection disconnects but the process is reused.
 
-  The `DBConnection.Query` protocol provide utility functions so that
+  The `DBConnLegacy.Query` protocol provide utility functions so that
   queries can be prepared or encoded and results decoding without
   blocking the connection or pool.
 
-  By default the `DBConnection` provides a single connection. However
+  By default the `DBConnLegacy` provides a single connection. However
   the `:pool` option can be set to use a pool of connections. If a
   pool is used the module must be passed as an option - unless inside a
   `run/3` or `transaction/3` fun and using the run/transaction
@@ -298,19 +298,19 @@ defmodule DBConnection do
 
   If the state is controlled by a client and it exits or takes too long
   to process a request the state will be last known state. In these
-  cases the exception will be a `DBConnection.ConnectionError`.
+  cases the exception will be a `DBConnLegacy.ConnectionError`.
 
   This callback is called in the connection process.
   """
   @callback disconnect(err :: Exception.t, state :: any) :: :ok
 
   @doc """
-  Use `DBConnection` to set the behaviour and include default
+  Use `DBConnLegacy` to set the behaviour and include default
   no-op implementations for `ping/1` and `handle_info/2`.
   """
   defmacro __using__(_) do
     quote location: :keep do
-      @behaviour DBConnection
+      @behaviour DBConnLegacy
 
       def connect(_) do
         # We do this to trick dialyzer to not complain about non-local returns.
@@ -442,14 +442,14 @@ defmodule DBConnection do
 
   ### Options
 
-    * `:pool` - The `DBConnection.Pool` module to use, (default:
-    `DBConnection.Connection`)
+    * `:pool` - The `DBConnLegacy.Pool` module to use, (default:
+    `DBConnLegacy.Connection`)
 
   """
   @spec ensure_all_started(opts :: Keyword.t, type :: atom) ::
     {:ok, [atom]} | {:error, atom}
   def ensure_all_started(opts, type \\ :temporary) do
-    Keyword.get(opts, :pool, DBConnection.Connection).ensure_all_started(opts, type)
+    Keyword.get(opts, :pool, DBConnLegacy.Connection).ensure_all_started(opts, type)
   end
 
   @doc """
@@ -457,8 +457,8 @@ defmodule DBConnection do
 
   ### Options
 
-    * `:pool` - The `DBConnection.Pool` module to use, (default:
-    `DBConnection.Connection`)
+    * `:pool` - The `DBConnLegacy.Pool` module to use, (default:
+    `DBConnLegacy.Connection`)
     * `:idle` - The idle strategy, `:passive` to avoid checkin when idle and
     `:active` to checkin when idle (default: `:passive`)
     * `:idle_timeout` - The idle timeout to ping the database (default:
@@ -473,18 +473,18 @@ defmodule DBConnection do
     `{module, function, args}` with options prepended to `args` or `nil` where
     only returned options are passed to connect callback (default: `nil`)
     * `:after_connect` - A function to run on connect using `run/3`, either
-    a 1-arity fun, `{module, function, args}` with `DBConnection.t` prepended
+    a 1-arity fun, `{module, function, args}` with `DBConnLegacy.t` prepended
     to `args` or `nil` (default: `nil`)
     * `:name` - A name to register the started process (see the `:name` option
     in `GenServer.start_link/3`).
 
   ### Example
 
-      {:ok, conn} = DBConnection.start_link(mod, [idle_timeout: 5_000])
+      {:ok, conn} = DBConnLegacy.start_link(mod, [idle_timeout: 5_000])
   """
   @spec start_link(module, opts :: Keyword.t) :: GenServer.on_start
   def start_link(conn_mod, opts) do
-    pool_mod = Keyword.get(opts, :pool, DBConnection.Connection)
+    pool_mod = Keyword.get(opts, :pool, DBConnLegacy.Connection)
     apply(pool_mod, :start_link, [conn_mod, opts])
   end
 
@@ -496,7 +496,7 @@ defmodule DBConnection do
   @spec child_spec(module, opts :: Keyword.t, child_opts :: Keyword.t) ::
     Supervisor.Spec.spec
   def child_spec(conn_mod, opts, child_opts \\ []) do
-    pool_mod = Keyword.get(opts, :pool, DBConnection.Connection)
+    pool_mod = Keyword.get(opts, :pool, DBConnLegacy.Connection)
     apply(pool_mod, :child_spec, [conn_mod, opts, child_opts])
   end
 
@@ -517,8 +517,8 @@ defmodule DBConnection do
     to hold the connection's state (ignored when using a run/transaction
     connection, default: `15_000`)
     * `:log` - A function to log information about a call, either
-    a 1-arity fun, `{module, function, args}` with `DBConnection.LogEntry.t`
-    prepended to `args` or `nil`. See `DBConnection.LogEntry` (default: `nil`)
+    a 1-arity fun, `{module, function, args}` with `DBConnLegacy.LogEntry.t`
+    prepended to `args` or `nil`. See `DBConnLegacy.LogEntry` (default: `nil`)
 
   The pool and connection module may support other options. All options
   are passed to `handle_prepare/3`.
@@ -526,9 +526,9 @@ defmodule DBConnection do
   ### Example
 
       query         = %Query{statement: "SELECT id FROM table"}
-      {:ok, query}  = DBConnection.prepare(conn, query)
-      {:ok, result} = DBConnection.execute(conn, query, [])
-      :ok           = DBConnection.close(conn, query)
+      {:ok, query}  = DBConnLegacy.prepare(conn, query)
+      {:ok, result} = DBConnLegacy.execute(conn, query, [])
+      :ok           = DBConnLegacy.close(conn, query)
 
   """
   @spec prepare(conn, query, opts :: Keyword.t) ::
@@ -574,15 +574,15 @@ defmodule DBConnection do
     to hold the connection's state (ignored when using a run/transaction
     connection, default: `15_000`)
     * `:log` - A function to log information about a call, either
-    a 1-arity fun, `{module, function, args}` with `DBConnection.LogEntry.t`
-    prepended to `args` or `nil`. See `DBConnection.LogEntry` (default: `nil`)
+    a 1-arity fun, `{module, function, args}` with `DBConnLegacy.LogEntry.t`
+    prepended to `args` or `nil`. See `DBConnLegacy.LogEntry` (default: `nil`)
 
   ### Example
 
       query                = %Query{statement: "SELECT id FROM table WHERE id=$1"}
-      {:ok, query, result} = DBConnection.prepare_execute(conn, query, [1])
-      {:ok, result2}       = DBConnection.execute(conn, query, [2])
-      :ok                  = DBConnection.close(conn, query)
+      {:ok, query, result} = DBConnLegacy.prepare_execute(conn, query, [1])
+      {:ok, result2}       = DBConnLegacy.execute(conn, query, [2])
+      :ok                  = DBConnLegacy.close(conn, query)
   """
   @spec prepare_execute(conn, query, params, Keyword.t) ::
     {:ok, query, result} |
@@ -629,8 +629,8 @@ defmodule DBConnection do
     to hold the connection's state (ignored when using a run/transaction
     connection, default: `15_000`)
     * `:log` - A function to log information about a call, either
-    a 1-arity fun, `{module, function, args}` with `DBConnection.LogEntry.t`
-    prepended to `args` or `nil`. See `DBConnection.LogEntry` (default: `nil`)
+    a 1-arity fun, `{module, function, args}` with `DBConnLegacy.LogEntry.t`
+    prepended to `args` or `nil`. See `DBConnLegacy.LogEntry` (default: `nil`)
 
   The pool and connection module may support other options. All options
   are passed to `handle_execute/4`.
@@ -680,8 +680,8 @@ defmodule DBConnection do
     to hold the connection's state (ignored when using a run/transaction
     connection, default: `15_000`)
     * `:log` - A function to log information about a call, either
-    a 1-arity fun, `{module, function, args}` with `DBConnection.LogEntry.t`
-    prepended to `args` or `nil`. See `DBConnection.LogEntry` (default: `nil`)
+    a 1-arity fun, `{module, function, args}` with `DBConnLegacy.LogEntry.t`
+    prepended to `args` or `nil`. See `DBConnLegacy.LogEntry` (default: `nil`)
 
   The pool and connection module may support other options. All options
   are passed to `handle_close/3`.
@@ -736,13 +736,13 @@ defmodule DBConnection do
 
   ### Example
 
-      {:ok, res} = DBConnection.run(conn, fn(conn) ->
-        DBConnection.execute!(conn, "SELECT id FROM table", [])
+      {:ok, res} = DBConnLegacy.run(conn, fn(conn) ->
+        DBConnLegacy.execute!(conn, "SELECT id FROM table", [])
       end)
   """
   @spec run(conn, (t -> result), opts :: Keyword.t) :: result when result: var
   def run(conn, fun, opts \\ [])
-  def run(%DBConnection{} = conn, fun, _) do
+  def run(%DBConnLegacy{} = conn, fun, _) do
     _ = fetch_info(conn)
     fun.(conn)
   end
@@ -779,8 +779,8 @@ defmodule DBConnection do
     to hold the connection's state (default: `15_000`)
     * `:log` - A function to log information about begin, commit and rollback
     calls made as part of the transaction, either a 1-arity fun,
-    `{module, function, args}` with `DBConnection.LogEntry.t` prepended to
-    `args` or `nil`. See `DBConnection.LogEntry` (default: `nil`)
+    `{module, function, args}` with `DBConnLegacy.LogEntry.t` prepended to
+    `args` or `nil`. See `DBConnLegacy.LogEntry` (default: `nil`)
 
   The pool and connection module may support other options. All options
   are passed to `handle_begin/2`, `handle_commit/2` and
@@ -788,8 +788,8 @@ defmodule DBConnection do
 
   ### Example
 
-      {:ok, res} = DBConnection.transaction(conn, fn(conn) ->
-        DBConnection.execute!(conn, "SELECT id FROM table", [])
+      {:ok, res} = DBConnLegacy.transaction(conn, fn(conn) ->
+        DBConnLegacy.execute!(conn, "SELECT id FROM table", [])
       end)
   """
   @spec transaction(conn, (conn -> result), opts :: Keyword.t) ::
@@ -815,13 +815,13 @@ defmodule DBConnection do
 
   ### Example
 
-      {:error, :bar} = DBConnection.transaction(conn, fn(conn) ->
-        DBConnection.rollback(conn, :bar)
+      {:error, :bar} = DBConnLegacy.transaction(conn, fn(conn) ->
+        DBConnLegacy.rollback(conn, :bar)
         IO.puts "never reaches here!"
       end)
   """
   @spec rollback(t, reason :: any) :: no_return
-  def rollback(%DBConnection{conn_ref: conn_ref} = conn, err) do
+  def rollback(%DBConnLegacy{conn_ref: conn_ref} = conn, err) do
     case get_info(conn) do
       {transaction, _} when transaction in [:transaction, :failed] ->
         throw({:rollback, conn_ref, err})
@@ -832,7 +832,7 @@ defmodule DBConnection do
       {:idle, _, _} ->
         raise "not inside transaction"
       :closed ->
-        raise DBConnection.ConnectionError, "connection is closed"
+        raise DBConnLegacy.ConnectionError, "connection is closed"
     end
   end
 
@@ -850,8 +850,8 @@ defmodule DBConnection do
     to hold the connection's state (ignored when using a run/transaction
     connection, default: `15_000`)
     * `:log` - A function to log information about a call, either
-    a 1-arity fun, `{module, function, args}` with `DBConnection.LogEntry.t`
-    prepended to `args` or `nil`. See `DBConnection.LogEntry` (default: `nil`)
+    a 1-arity fun, `{module, function, args}` with `DBConnLegacy.LogEntry.t`
+    prepended to `args` or `nil`. See `DBConnLegacy.LogEntry` (default: `nil`)
 
   The pool and connection module may support other options. All options
   are passed to `handle_prepare/3, `handle_close/3, `handle_declare/4`,
@@ -859,16 +859,16 @@ defmodule DBConnection do
 
   ### Example
 
-      {:ok, results} = DBConnection.transaction(conn, fn(conn) ->
+      {:ok, results} = DBConnLegacy.transaction(conn, fn(conn) ->
         query  = %Query{statement: "SELECT id FROM table"}
-        stream = DBConnection.prepare_stream(conn, query, [])
+        stream = DBConnLegacy.prepare_stream(conn, query, [])
         Enum.to_list(stream)
       end)
   """
   @spec prepare_stream(t, query, params, opts :: Keyword.t) ::
-    DBConnection.PrepareStream.t
-  def prepare_stream(%DBConnection{} = conn, query, params, opts) do
-    %DBConnection.PrepareStream{conn: conn, query: query, params: params,
+    DBConnLegacy.PrepareStream.t
+  def prepare_stream(%DBConnLegacy{} = conn, query, params, opts) do
+    %DBConnLegacy.PrepareStream{conn: conn, query: query, params: params,
                                 opts: opts}
   end
 
@@ -886,8 +886,8 @@ defmodule DBConnection do
     to hold the connection's state (ignored when using a run/transaction
     connection, default: `15_000`)
     * `:log` - A function to log information about a call, either
-    a 1-arity fun, `{module, function, args}` with `DBConnection.LogEntry.t`
-    prepended to `args` or `nil`. See `DBConnection.LogEntry` (default: `nil`)
+    a 1-arity fun, `{module, function, args}` with `DBConnLegacy.LogEntry.t`
+    prepended to `args` or `nil`. See `DBConnLegacy.LogEntry` (default: `nil`)
 
   The pool and connection module may support other options. All options
   are passed to `handle_declare/4`, `handle_first/4` , `handle_next/4` and
@@ -895,27 +895,27 @@ defmodule DBConnection do
 
   ### Example
 
-      {:ok, results} = DBConnection.transaction(conn, fn(conn) ->
+      {:ok, results} = DBConnLegacy.transaction(conn, fn(conn) ->
         query  = %Query{statement: "SELECT id FROM table"}
-        query  = DBConnection.prepare!(conn, query)
-        stream = DBConnection.stream(conn, query, [])
+        query  = DBConnLegacy.prepare!(conn, query)
+        stream = DBConnLegacy.stream(conn, query, [])
         Enum.to_list(stream)
       end)
   """
-  @spec stream(t, query, params, opts :: Keyword.t) :: DBConnection.Stream.t
-  def stream(%DBConnection{} = conn, query, params, opts \\ []) do
-    %DBConnection.Stream{conn: conn, query: query, params: params, opts: opts}
+  @spec stream(t, query, params, opts :: Keyword.t) :: DBConnLegacy.Stream.t
+  def stream(%DBConnLegacy{} = conn, query, params, opts \\ []) do
+    %DBConnLegacy.Stream{conn: conn, query: query, params: params, opts: opts}
   end
 
   @doc false
-  def reduce(%DBConnection.PrepareStream{} = stream, acc, fun) do
-    %DBConnection.PrepareStream{conn: conn, query: query, params: params,
+  def reduce(%DBConnLegacy.PrepareStream{} = stream, acc, fun) do
+    %DBConnLegacy.PrepareStream{conn: conn, query: query, params: params,
                                 opts: opts} = stream
     start = &prepare_declare(&1, query, params, &2)
     resource(conn, start, &fetch/3, &deallocate/3, opts).(acc, fun)
   end
-  def reduce(%DBConnection.Stream{} = stream, acc, fun) do
-    %DBConnection.Stream{conn: conn, query: query, params: params,
+  def reduce(%DBConnLegacy.Stream{} = stream, acc, fun) do
+    %DBConnLegacy.Stream{conn: conn, query: query, params: params,
                          opts: opts} = stream
     start = &declare(&1, query, params, &2)
     resource(conn, start, &fetch/3, &deallocate/3, opts).(acc, fun)
@@ -924,10 +924,10 @@ defmodule DBConnection do
   ## Helpers
 
   defp checkout(pool, opts) do
-    pool_mod = Keyword.get(opts, :pool, DBConnection.Connection)
+    pool_mod = Keyword.get(opts, :pool, DBConnLegacy.Connection)
     case apply(pool_mod, :checkout, [pool, opts]) do
       {:ok, pool_ref, conn_mod, conn_state} ->
-        conn = %DBConnection{pool_mod: pool_mod, pool_ref: pool_ref,
+        conn = %DBConnLegacy{pool_mod: pool_mod, pool_ref: pool_ref,
           conn_mod: conn_mod, conn_ref: make_ref()}
         {conn, conn_state}
       {:error, err} ->
@@ -936,14 +936,14 @@ defmodule DBConnection do
   end
 
   defp checkin(conn, conn_state, opts) do
-    %DBConnection{pool_mod: pool_mod, pool_ref: pool_ref} = conn
+    %DBConnLegacy{pool_mod: pool_mod, pool_ref: pool_ref} = conn
     _ = apply(pool_mod, :checkin, [pool_ref, conn_state, opts])
     :ok
   end
 
   defp delete_disconnect(conn, conn_state, err, opts) do
     _ = delete_info(conn)
-    %DBConnection{pool_mod: pool_mod, pool_ref: pool_ref} = conn
+    %DBConnLegacy{pool_mod: pool_mod, pool_ref: pool_ref} = conn
     args = [pool_ref, err, conn_state, opts]
     _ = apply(pool_mod, :disconnect, args)
     :ok
@@ -953,14 +953,14 @@ defmodule DBConnection do
     _ = delete_info(conn)
     msg = "client #{inspect self()} stopped: " <>
       Exception.format(kind, reason, stack)
-    exception = DBConnection.ConnectionError.exception(msg)
-    %DBConnection{pool_mod: pool_mod, pool_ref: pool_ref} = conn
+    exception = DBConnLegacy.ConnectionError.exception(msg)
+    %DBConnLegacy{pool_mod: pool_mod, pool_ref: pool_ref} = conn
     args = [pool_ref, exception, conn_state, opts]
     _ = apply(pool_mod, :stop, args)
     :ok
   end
 
-  defp handle(%DBConnection{conn_mod: conn_mod} = conn, fun, args, opts) do
+  defp handle(%DBConnLegacy{conn_mod: conn_mod} = conn, fun, args, opts) do
     {status, conn_state} = fetch_info(conn)
     try do
       apply(conn_mod, fun, args ++ [opts, conn_state])
@@ -980,7 +980,7 @@ defmodule DBConnection do
         {:error, err}
       other ->
         try do
-          raise DBConnection.ConnectionError, "bad return value: #{inspect other}"
+          raise DBConnLegacy.ConnectionError, "bad return value: #{inspect other}"
         catch
           :error, reason ->
             stack = System.stacktrace()
@@ -997,7 +997,7 @@ defmodule DBConnection do
 
   defp parse(call, query, params, opts) do
     try do
-      DBConnection.Query.parse(query, opts)
+      DBConnLegacy.Query.parse(query, opts)
     catch
       kind, reason ->
         pre_log(call, query, params, opts, kind, reason, System.stacktrace())
@@ -1006,7 +1006,7 @@ defmodule DBConnection do
 
   defp encode(call, query, params, opts) do
     try do
-      DBConnection.Query.encode(query, params, opts)
+      DBConnLegacy.Query.encode(query, params, opts)
     catch
       kind, reason ->
         stack = System.stacktrace()
@@ -1016,7 +1016,7 @@ defmodule DBConnection do
 
   defp decode(call, query, params, meter, result, opts) do
     try do
-      DBConnection.Query.decode(query, result, opts)
+      DBConnLegacy.Query.decode(query, result, opts)
     catch
       kind, reason ->
         raised = {kind, reason, System.stacktrace()}
@@ -1051,7 +1051,7 @@ defmodule DBConnection do
 
   defp describe(conn, query, opts) do
     try do
-      DBConnection.Query.describe(query, opts)
+      DBConnLegacy.Query.describe(query, opts)
     catch
       kind, reason ->
         raised = {kind, reason, System.stacktrace()}
@@ -1075,8 +1075,8 @@ defmodule DBConnection do
 
   defp describe_run(conn, fun, query, params, opts) do
     try do
-      query = DBConnection.Query.describe(query, opts)
-      [query, DBConnection.Query.encode(query, params, opts)]
+      query = DBConnLegacy.Query.describe(query, opts)
+      [query, DBConnLegacy.Query.encode(query, params, opts)]
     catch
       kind, reason ->
         raised = {kind, reason, System.stacktrace()}
@@ -1127,7 +1127,7 @@ defmodule DBConnection do
     end
   end
 
-  defp run_meter(%DBConnection{} = conn, fun, opts) do
+  defp run_meter(%DBConnLegacy{} = conn, fun, opts) do
     case Keyword.get(opts, :log) do
       nil ->
         {run(conn, fun, opts), nil}
@@ -1182,7 +1182,7 @@ defmodule DBConnection do
   end
 
   defp log(call, query, params, log, times, result) do
-    entry = DBConnection.LogEntry.new(call, query, params, times, entry_result(result))
+    entry = DBConnLegacy.LogEntry.new(call, query, params, times, entry_result(result))
     log(log, entry)
     log_result(result)
   end
@@ -1190,7 +1190,7 @@ defmodule DBConnection do
   defp entry_result({kind, reason, stack})
   when kind in [:error, :exit, :throw] do
     msg = "an exception was raised: " <> Exception.format(kind, reason, stack)
-    {:error, %DBConnection.ConnectionError{message: msg}}
+    {:error, %DBConnLegacy.ConnectionError{message: msg}}
   end
   defp entry_result(other), do: other
 
@@ -1228,7 +1228,7 @@ defmodule DBConnection do
     end
   end
 
-  defp transaction_meter(%DBConnection{} = conn, fun, opts) do
+  defp transaction_meter(%DBConnLegacy{} = conn, fun, opts) do
     case fetch_info(conn) do
       {:transaction, _} ->
         {transaction_nested(conn, fun), nil}
@@ -1278,7 +1278,7 @@ defmodule DBConnection do
   end
 
   defp transaction_run(conn, log, fun, opts) do
-    %DBConnection{conn_ref: conn_ref} = conn
+    %DBConnLegacy{conn_ref: conn_ref} = conn
     try do
       fun.(conn)
     else
@@ -1338,7 +1338,7 @@ defmodule DBConnection do
   end
 
   defp handle(conn, conn_state, callback, opts, status) do
-    %DBConnection{conn_mod: conn_mod} = conn
+    %DBConnLegacy{conn_mod: conn_mod} = conn
     try do
       apply(conn_mod, callback, [opts, conn_state])
     else
@@ -1353,7 +1353,7 @@ defmodule DBConnection do
         {:raise, err}
       other ->
         try do
-          raise DBConnection.ConnectionError, "bad return value: #{inspect other}"
+          raise DBConnLegacy.ConnectionError, "bad return value: #{inspect other}"
         catch
           :error, reason ->
             stack = System.stacktrace()
@@ -1369,7 +1369,7 @@ defmodule DBConnection do
   end
 
   defp transaction_nested(conn, fun) do
-    %DBConnection{conn_ref: conn_ref} = conn
+    %DBConnLegacy{conn_ref: conn_ref} = conn
     try do
       fun.(conn)
     else
@@ -1513,7 +1513,7 @@ defmodule DBConnection do
     end
   end
 
-  defp resource(%DBConnection{} = conn, start, next, stop, opts) do
+  defp resource(%DBConnLegacy{} = conn, start, next, stop, opts) do
     start = fn() -> start.(conn, opts) end
     next = fn(state) -> next.(conn, state, opts) end
     stop = fn(state) -> stop.(conn, state, opts) end
@@ -1528,11 +1528,11 @@ defmodule DBConnection do
   defp fetch_info(conn) do
     case get_info(conn) do
       {:failed, _} ->
-        raise DBConnection.ConnectionError, "transaction rolling back"
+        raise DBConnLegacy.ConnectionError, "transaction rolling back"
       {_, _} = info ->
         info
       :closed ->
-        raise DBConnection.ConnectionError, "connection is closed"
+        raise DBConnLegacy.ConnectionError, "connection is closed"
     end
   end
 
@@ -1542,5 +1542,5 @@ defmodule DBConnection do
     Process.delete(key(conn)) || :closed
   end
 
-  defp key(%DBConnection{conn_ref: conn_ref}), do: {__MODULE__, conn_ref}
+  defp key(%DBConnLegacy{conn_ref: conn_ref}), do: {__MODULE__, conn_ref}
 end

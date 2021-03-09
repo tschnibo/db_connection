@@ -24,7 +24,7 @@ defmodule PrepareStreamTest do
     {:ok, pool} = P.start_link(opts)
     assert P.transaction(pool, fn(conn) ->
       stream = P.prepare_stream(conn, %Q{}, [:param])
-      assert %DBConnection.PrepareStream{} = stream
+      assert %DBConnLegacy.PrepareStream{} = stream
       assert Enum.to_list(stream) == [%R{}, %R{}]
       :hi
     end) == {:ok, :hi}
@@ -98,14 +98,14 @@ defmodule PrepareStreamTest do
       :hi
     end) == {:ok, :hi}
 
-    assert_received %DBConnection.LogEntry{call: :prepare_declare} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :prepare_declare} = entry
     assert %{query: %Q{}, params: [:param], result: {:ok, %Q{}, %C{}}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
     assert entry.connection_time >= 0
     assert is_nil(entry.decode_time)
 
-    assert_received %DBConnection.LogEntry{call: :first} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :first} = entry
     assert %{query: %Q{}, params: %C{}, result: {:ok, %R{}}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
@@ -113,7 +113,7 @@ defmodule PrepareStreamTest do
     assert is_integer(entry.decode_time)
     assert entry.decode_time >= 0
 
-    assert_received %DBConnection.LogEntry{call: :deallocate} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :deallocate} = entry
     assert %{query: %Q{}, params: %C{}, result: {:ok, :deallocated}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
@@ -151,7 +151,7 @@ defmodule PrepareStreamTest do
       :hi
     end) == {:ok, :hi}
 
-    assert_received %DBConnection.LogEntry{call: :prepare_declare} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :prepare_declare} = entry
     assert %{query: %Q{}, params: [:param], result: {:error, ^err}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
@@ -187,7 +187,7 @@ defmodule PrepareStreamTest do
       :hi
     end) == {:ok, :hi}
 
-    assert_received %DBConnection.LogEntry{call: :prepare_declare} = entry
+    assert_received %DBConnLegacy.LogEntry{call: :prepare_declare} = entry
     assert %{query: %Q{}, params: [:param], result: {:error, ^err}} = entry
     assert is_nil(entry.pool_time)
     assert is_integer(entry.connection_time)
@@ -261,16 +261,16 @@ defmodule PrepareStreamTest do
     Process.flag(:trap_exit, true)
     assert P.transaction(pool, fn(conn) ->
       stream = P.prepare_stream(conn, %Q{}, [:param])
-      assert_raise DBConnection.ConnectionError, "bad return value: :oops",
+      assert_raise DBConnLegacy.ConnectionError, "bad return value: :oops",
         fn() -> Enum.to_list(stream) end
       :hi
     end) == {:error, :rollback}
 
     prefix = "client #{inspect self()} stopped: " <>
-      "** (DBConnection.ConnectionError) bad return value: :oops"
+      "** (DBConnLegacy.ConnectionError) bad return value: :oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
         [_|_]}}
 
     assert [
@@ -310,7 +310,7 @@ defmodule PrepareStreamTest do
     prefix = "client #{inspect self()} stopped: ** (RuntimeError) oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
         [_|_]}}
 
     assert [

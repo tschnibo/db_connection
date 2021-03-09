@@ -1,15 +1,15 @@
-# DBConnection
+# DBConnLegacy
 
 Database connection behaviour and database connection pool designed for
 handling transaction, prepare/execute, cursors and client process
 describe/encode/decode.
 
-Four pool implementations are provided: `DBConnection.Connection`
-(default/single connection), `DBConnection.Poolboy` (poolboy pool),
-`DBConnection.Sojourn` (sbroker pool) and `DBConnection.Ownership`
+Four pool implementations are provided: `DBConnLegacy.Connection`
+(default/single connection), `DBConnLegacy.Poolboy` (poolboy pool),
+`DBConnLegacy.Sojourn` (sbroker pool) and `DBConnLegacy.Ownership`
 (ownership pool).
 
-Examples of using the `DBConnection` behaviour are available in
+Examples of using the `DBConnLegacy` behaviour are available in
 `./examples/db_agent/` and `./examples/tcp_connection/`.
 
 ## License

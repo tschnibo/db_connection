@@ -1,4 +1,4 @@
-defmodule DBConnection.LogEntry do
+defmodule DBConnLegacy.LogEntry do
   @moduledoc """
   Struct containing log entry information.
   """
@@ -9,7 +9,7 @@ defmodule DBConnection.LogEntry do
   @typedoc """
   Log entry information.
 
-    * `:call` - The `DBConnection` function called
+    * `:call` - The `DBConnLegacy` function called
     * `:query` - The query used by the function
     * `:params` - The params passed to the function (if any)
     * `:result` - The result of the call
@@ -17,7 +17,7 @@ defmodule DBConnection.LogEntry do
     the connection was not already checked out)
     * `:connection_time` - The length of time using the connection
     * `:decode_time` - The length of time decoding the result (if decoded the
-    result using `DBConnection.Query.decode/3`)
+    result using `DBConnLegacy.Query.decode/3`)
 
   All times are in the native time units of the VM, see
   `System.monotonic_time/0`. Falls back to `:os.timestamp/0`.

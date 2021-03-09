@@ -1,12 +1,12 @@
 DBAgent
 =======
 
-`DBAgent` is a simple `DBConnection` process that behaves in a similar
+`DBAgent` is a simple `DBConnLegacy` process that behaves in a similar
 way to an `Agent` except the state is copied to the client process and functions
 called there. Transactions are also supported.
 
 This example should help show the way transactions are handled in
-`DBConnection`, and allow easy experimentation with the API.
+`DBConnLegacy`, and allow easy experimentation with the API.
 
 ```elixir
 {:ok, agent} = DBAgent.start_link(fn() -> %{} end)

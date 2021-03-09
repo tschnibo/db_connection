@@ -187,7 +187,7 @@ defmodule ConnectTest do
 
     assert [
       {:connect, [_]},
-      {:disconnect, [%DBConnection.ConnectionError{}, :state]},
+      {:disconnect, [%DBConnLegacy.ConnectionError{}, :state]},
       {:connect, [_]} | _] = A.record(agent)
   end
 end

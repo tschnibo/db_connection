@@ -1,9 +1,9 @@
-defmodule DBConnection.Ownership.ProxySupervisor do
+defmodule DBConnLegacy.Ownership.ProxySupervisor do
   @moduledoc false
   import Supervisor.Spec
 
   def start_link do
-    children  = [supervisor(DBConnection.Ownership.Proxy, [], [restart: :temporary])]
+    children  = [supervisor(DBConnLegacy.Ownership.Proxy, [], [restart: :temporary])]
     opts      = [strategy: :simple_one_for_one]
     Supervisor.start_link(children, opts)
   end

@@ -73,7 +73,7 @@ defmodule PrepareTest do
     {:ok, pool} = P.start_link(opts)
 
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :prepare, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :prepare, query: %Q{},
                                     params: nil, result: {:ok, %Q{}}} = entry
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
@@ -119,7 +119,7 @@ defmodule PrepareTest do
     opts = [agent: agent, parent: parent]
     {:ok, pool} = P.start_link(opts)
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :prepare, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :prepare, query: %Q{},
                                     params: nil, result: {:error, ^err}} = entry
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
@@ -154,9 +154,9 @@ defmodule PrepareTest do
     _ = Process.flag(:trap_exit, true)
     {:ok, pool} = P.start_link(opts)
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :prepare, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :prepare, query: %Q{},
                                     params: nil, result: {:error, err}} = entry
-      assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+      assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
       assert is_integer(entry.connection_time)
@@ -167,7 +167,7 @@ defmodule PrepareTest do
     assert_raise RuntimeError, "oops",
       fn() -> P.prepare(pool, %Q{}, [log: log]) end
     assert_received :logged
-    assert_receive {:EXIT, _, {%DBConnection.ConnectionError{}, [_|_]}}
+    assert_receive {:EXIT, _, {%DBConnLegacy.ConnectionError{}, [_|_]}}
 
     assert [
       {:connect, [_]},
@@ -186,9 +186,9 @@ defmodule PrepareTest do
     opts = [agent: agent, parent: parent]
     {:ok, pool} = P.start_link(opts)
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :prepare, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :prepare, query: %Q{},
                                     params: nil, result: {:error, err}} = entry
-      assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+      assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
       assert is_nil(entry.pool_time)
       assert is_nil(entry.connection_time)
       assert is_nil(entry.decode_time)
@@ -200,9 +200,9 @@ defmodule PrepareTest do
     assert_received :logged
 
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :prepare, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :prepare, query: %Q{},
                                     params: nil, result: {:error, err}} = entry
-      assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+      assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
       assert is_integer(entry.connection_time)

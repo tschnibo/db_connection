@@ -1,7 +1,7 @@
 TCPConnection
 =============
 
-`TCPConnection` is a simple `DBConnection` process that behaves in a
+`TCPConnection` is a simple `DBConnLegacy` process that behaves in a
 similar way to a `:gen_tcp` socket.
 
 This example should help show how to handle the lifecycle of a socket

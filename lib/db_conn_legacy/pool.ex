@@ -1,7 +1,7 @@
-defmodule DBConnection.Pool do
+defmodule DBConnLegacy.Pool do
   @moduledoc """
   A behaviour module for implementing a pool of database connections
-  using `DBConnection`.
+  using `DBConnLegacy`.
   """
 
   @doc """

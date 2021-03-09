@@ -1,7 +1,7 @@
-defmodule DBConnection.BackoffTest do
+defmodule DBConnLegacy.BackoffTest do
   use ExUnit.Case, async: true
 
-  alias DBConnection.Backoff
+  alias DBConnLegacy.Backoff
 
   @moduletag backoff_min: 1_000
   @moduletag backoff_max: 30_000

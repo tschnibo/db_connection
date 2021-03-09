@@ -57,7 +57,7 @@ defmodule ExecuteTest do
     {:ok, pool} = P.start_link(opts)
 
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :execute, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :execute, query: %Q{},
                                     params: [:param],
                                     result: {:ok, %R{}}} = entry
       assert is_integer(entry.pool_time)
@@ -105,7 +105,7 @@ defmodule ExecuteTest do
     opts = [agent: agent, parent: parent]
     {:ok, pool} = P.start_link(opts)
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :execute, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :execute, query: %Q{},
                                     params: [:param],
                                     result: {:error, ^err}} = entry
       assert is_integer(entry.pool_time)
@@ -141,10 +141,10 @@ defmodule ExecuteTest do
     _ = Process.flag(:trap_exit, true)
     {:ok, pool} = P.start_link(opts)
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :execute, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :execute, query: %Q{},
                                     params: [:param],
                                     result: {:error, err}} = entry
-      assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+      assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
       assert is_integer(entry.connection_time)
@@ -155,7 +155,7 @@ defmodule ExecuteTest do
     assert_raise RuntimeError, "oops",
       fn() -> P.execute(pool, %Q{}, [:param], [log: log]) end
     assert_received :logged
-    assert_receive {:EXIT, _, {%DBConnection.ConnectionError{}, [_|_]}}
+    assert_receive {:EXIT, _, {%DBConnLegacy.ConnectionError{}, [_|_]}}
 
     assert [
       {:connect, [_]},
@@ -174,9 +174,9 @@ defmodule ExecuteTest do
     _ = Process.flag(:trap_exit, true)
     {:ok, pool} = P.start_link(opts)
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :execute, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :execute, query: %Q{},
                                     params: [:param], result: {:error, err}} = entry
-      assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+      assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
       assert is_nil(entry.pool_time)
       assert is_nil(entry.connection_time)
       assert is_nil(entry.decode_time)
@@ -188,9 +188,9 @@ defmodule ExecuteTest do
     assert_received :logged
 
     log = fn(entry) ->
-      assert %DBConnection.LogEntry{call: :execute, query: %Q{},
+      assert %DBConnLegacy.LogEntry{call: :execute, query: %Q{},
                                     params: [:param], result: {:error, err}} = entry
-      assert %DBConnection.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
+      assert %DBConnLegacy.ConnectionError{message: "an exception was raised: ** (RuntimeError) oops" <> _} = err
       assert is_integer(entry.pool_time)
       assert entry.pool_time >= 0
       assert is_integer(entry.connection_time)
@@ -253,7 +253,7 @@ defmodule ExecuteTest do
       connect: [opts2]] = A.record(agent)
   end
 
-  test "execute bad return raises DBConnection.ConnectionError and stops" do
+  test "execute bad return raises DBConnLegacy.ConnectionError and stops" do
     stack = [
       fn(opts) ->
         send(opts[:parent], {:hi, self()})
@@ -270,14 +270,14 @@ defmodule ExecuteTest do
     assert_receive {:hi, conn}
 
     Process.flag(:trap_exit, true)
-    assert_raise DBConnection.ConnectionError, "bad return value: :oops",
+    assert_raise DBConnLegacy.ConnectionError, "bad return value: :oops",
       fn() -> P.execute(pool, %Q{}, [:param]) end
 
     prefix = "client #{inspect self()} stopped: " <>
-      "** (DBConnection.ConnectionError) bad return value: :oops"
+      "** (DBConnLegacy.ConnectionError) bad return value: :oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
         [_|_]}}
 
     assert [
@@ -310,7 +310,7 @@ defmodule ExecuteTest do
     prefix = "client #{inspect self()} stopped: ** (RuntimeError) oops"
     len = byte_size(prefix)
     assert_receive {:EXIT, ^conn,
-      {%DBConnection.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
+      {%DBConnLegacy.ConnectionError{message: <<^prefix::binary-size(len), _::binary>>},
        [_|_]}}
 
     assert [

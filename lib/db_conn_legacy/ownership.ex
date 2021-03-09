@@ -1,12 +1,12 @@
-defmodule DBConnection.OwnershipError do
+defmodule DBConnLegacy.OwnershipError do
   defexception [:message]
 
-  def exception(message), do: %DBConnection.OwnershipError{message: message}
+  def exception(message), do: %DBConnLegacy.OwnershipError{message: message}
 end
 
-defmodule DBConnection.Ownership do
+defmodule DBConnLegacy.Ownership do
   @moduledoc """
-  A `DBConnection.Pool` that requires explicit checkout and checkin
+  A `DBConnLegacy.Pool` that requires explicit checkout and checkin
   as a mechanism to coordinate between processes.
 
   ### Options
@@ -37,10 +37,10 @@ defmodule DBConnection.Ownership do
   connection (hence the `:infinity` timeout).
   """
 
-  @behaviour DBConnection.Pool
+  @behaviour DBConnLegacy.Pool
 
-  alias DBConnection.Ownership.Manager
-  alias DBConnection.Ownership.Proxy
+  alias DBConnLegacy.Ownership.Manager
+  alias DBConnLegacy.Ownership.Proxy
 
   ## Ownership API
 
@@ -104,7 +104,7 @@ defmodule DBConnection.Ownership do
 
   @doc false
   def ensure_all_started(opts, type) do
-    Keyword.get(opts, :ownership_pool, DBConnection.Poolboy).ensure_all_started(opts, type)
+    Keyword.get(opts, :ownership_pool, DBConnLegacy.Poolboy).ensure_all_started(opts, type)
   end
 
   @doc false
@@ -154,7 +154,7 @@ defmodule DBConnection.Ownership do
         If you are reading this error, it means you have not done one
         of the steps above or that the owner process has crashed.
         """
-        {:error, DBConnection.OwnershipError.exception(msg)}
+        {:error, DBConnLegacy.OwnershipError.exception(msg)}
     end
   end
 

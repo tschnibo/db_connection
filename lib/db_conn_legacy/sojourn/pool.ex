@@ -1,7 +1,7 @@
-defmodule DBConnection.Sojourn.Pool do
+defmodule DBConnLegacy.Sojourn.Pool do
   @moduledoc false
 
-  @regulator DBConnection.Sojourn.Regulator
+  @regulator DBConnLegacy.Sojourn.Regulator
 
   import Supervisor.Spec
 
@@ -27,7 +27,7 @@ defmodule DBConnection.Sojourn.Pool do
   ## Helpers
 
   defp watcher(owner) do
-    worker(DBConnection.Watcher, [owner])
+    worker(DBConnLegacy.Watcher, [owner])
   end
 
   defp regulator(opts) do
@@ -39,13 +39,13 @@ defmodule DBConnection.Sojourn.Pool do
 
   defp conn_sup(mod, opts) do
     child_opts = Keyword.take(opts, [:shutdown])
-    conn = DBConnection.Connection.child_spec(mod, opts, :sojourn, child_opts)
+    conn = DBConnLegacy.Connection.child_spec(mod, opts, :sojourn, child_opts)
     sup_opts  = Keyword.take(opts, [:max_restarts, :max_seconds])
     sup_opts  = [strategy: :simple_one_for_one] ++ sup_opts
     supervisor(Supervisor, [[conn], sup_opts], [id: :conn_sup])
   end
 
   defp starter(owner, opts) do
-    worker(DBConnection.Sojourn.Starter, [owner, opts], [restart: :transient])
+    worker(DBConnLegacy.Sojourn.Starter, [owner, opts], [restart: :transient])
   end
 end

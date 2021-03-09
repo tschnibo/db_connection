@@ -1,28 +1,28 @@
-defmodule DBConnection.ConnectionError do
+defmodule DBConnLegacy.ConnectionError do
   defexception [:message]
 
-  def exception(message), do: %DBConnection.ConnectionError{message: message}
+  def exception(message), do: %DBConnLegacy.ConnectionError{message: message}
 end
 
-defmodule DBConnection.Connection do
+defmodule DBConnLegacy.Connection do
   @moduledoc """
-  A `DBConnection.Pool` with a single connection, the default pool.
+  A `DBConnLegacy.Pool` with a single connection, the default pool.
 
   ### Options
 
     * `:sync_connect` - Whether to block the caller of `start_link` to
     carry out an initial connection attempt (boolean, default: `false`)
   """
-  @behaviour DBConnection.Pool
+  @behaviour DBConnLegacy.Pool
   use Connection
   require Logger
-  alias DBConnection.Backoff
+  alias DBConnLegacy.Backoff
 
   @pool_timeout  5_000
   @timeout       15_000
   @idle_timeout  1_000
 
-  ## DBConnection.Pool API
+  ## DBConnLegacy.Pool API
 
   @doc false
   def ensure_all_started(_opts, _type) do
@@ -222,7 +222,7 @@ defmodule DBConnection.Connection do
         handle_checkout({ref, mon}, timeout, from, state, s)
       %{client: :closed} ->
         message = "connection not available because of disconnection"
-        err = DBConnection.ConnectionError.exception(message)
+        err = DBConnLegacy.ConnectionError.exception(message)
         {:reply, {:error, err}, s}
       %{queue: queue} when queue? == true ->
         client = {ref, Process.monitor(pid)}
@@ -230,7 +230,7 @@ defmodule DBConnection.Connection do
         {:noreply, %{s | queue: queue}}
       _ when queue? == false ->
         message = "connection not available and queuing is disabled"
-        err = DBConnection.ConnectionError.exception(message)
+        err = DBConnLegacy.ConnectionError.exception(message)
         {:reply, {:error, err}, s}
     end
   end
@@ -292,7 +292,7 @@ defmodule DBConnection.Connection do
       {:ok, state} ->
         opts = [timeout: timeout] ++ opts
         {pid, ref} =
-          DBConnection.Task.run_child(mod, after_connect, state, opts)
+          DBConnLegacy.Task.run_child(mod, after_connect, state, opts)
         timer = start_timer(pid, timeout)
         s = %{s | client: {ref, :after_connect}, timer: timer, state: state}
         {:noreply, s}
@@ -327,12 +327,12 @@ defmodule DBConnection.Connection do
   def handle_info({:DOWN, ref, _, pid, reason},
   %{client: {ref, :after_connect}} = s) do
     message = "client #{inspect pid} exited: " <> Exception.format_exit(reason)
-    err = DBConnection.ConnectionError.exception(message)
+    err = DBConnLegacy.ConnectionError.exception(message)
     {:disconnect, {down_log(reason), err}, %{s | client: {nil, :after_connect}}}
   end
   def handle_info({:DOWN, mon, _, pid, reason}, %{client: {ref, mon}} = s) do
     message = "client #{inspect pid} exited: " <> Exception.format_exit(reason)
-    err = DBConnection.ConnectionError.exception(message)
+    err = DBConnLegacy.ConnectionError.exception(message)
     {:disconnect, {down_log(reason), err}, %{s | client: {ref, nil}}}
   end
   def handle_info({:DOWN, _, :process, _, _} = msg, %{queue: :broker} = s) do
@@ -354,7 +354,7 @@ defmodule DBConnection.Connection do
   %{timer: timer} = s) when is_reference(timer) do
     message = "client #{inspect pid} timed out because " <>
     "it checked out the connection for longer than #{timeout}ms"
-    exception = DBConnection.ConnectionError.exception(message)
+    exception = DBConnLegacy.ConnectionError.exception(message)
     case s do
       # Client timed out and using poolboy. Disable backoff to cause an exit so
       # that poolboy starts a new process immediately. Otherwise this worker
@@ -542,7 +542,7 @@ defmodule DBConnection.Connection do
         continue(idle, s)
       {:stop, _} ->
         msg = "regulator #{inspect regulator} did not allow connection to continue"
-        err = DBConnection.SojournError.exception(msg)
+        err = DBConnLegacy.SojournError.exception(msg)
         {:disconnect, {:nolog, err}, %{s | idle_time: 0, lock: nil}}
     end
   end
@@ -632,7 +632,7 @@ defmodule DBConnection.Connection do
       fn({{_, mon}, _, from}) ->
           Process.demonitor(mon, [:flush])
           message = "connection not available because of disconnection"
-          err = DBConnection.ConnectionError.exception(message)
+          err = DBConnLegacy.ConnectionError.exception(message)
           Connection.reply(from, {:error, err})
           false
       end

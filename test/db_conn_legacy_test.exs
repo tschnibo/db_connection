@@ -1,4 +1,4 @@
-defmodule DBConnectionTest do
+defmodule DBConnLegacyTest do
   use ExUnit.Case, async: true
 
   alias TestConnection, as: C
@@ -6,7 +6,7 @@ defmodule DBConnectionTest do
 
   test "__using__ defaults" do
     defmodule Sample do
-      use DBConnection
+      use DBConnLegacy
     end
 
     try do

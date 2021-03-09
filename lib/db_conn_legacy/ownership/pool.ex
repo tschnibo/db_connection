@@ -1,12 +1,12 @@
-defmodule DBConnection.Ownership.Pool do
+defmodule DBConnLegacy.Ownership.Pool do
   @moduledoc false
 
   import Supervisor.Spec
 
   def start_link(owner, mod, opts) do
     children = [watcher(owner),
-                DBConnection.child_spec(mod, opts, [id: :pool]),
-                supervisor(DBConnection.Ownership.ProxySupervisor, [],
+                DBConnLegacy.child_spec(mod, opts, [id: :pool]),
+                supervisor(DBConnLegacy.Ownership.ProxySupervisor, [],
                   [id: :owner_sup])]
     sup_opts = [strategy: :rest_for_one, max_restarts: 0]
     Supervisor.start_link(children, sup_opts)
@@ -33,6 +33,6 @@ defmodule DBConnection.Ownership.Pool do
   end
 
   defp watcher(owner) do
-    worker(DBConnection.Watcher, [owner])
+    worker(DBConnLegacy.Watcher, [owner])
   end
 end

@@ -73,7 +73,7 @@ defmodule TestShutdown do
     assert {:status, _, _, [_, _, pool_sup, _, _]} = :sys.get_status(watcher)
 
     _ = Process.flag(:trap_exit, true)
-    sup = DBConnection.Sojourn.Supervisor
+    sup = DBConnLegacy.Sojourn.Supervisor
     assert Supervisor.terminate_child(sup, pool_sup) == :ok
     assert_receive {:DOWN, ^conn_mon, _, _, :killed}
     assert_receive {:EXIT, ^pool, :shutdown}

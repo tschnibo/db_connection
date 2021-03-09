@@ -1,6 +1,6 @@
 defmodule TCPConnection do
 
-  use DBConnection
+  use DBConnLegacy
 
   defmodule Query do
     defstruct [:query]
@@ -21,22 +21,22 @@ defmodule TCPConnection do
 
   def start_link(host, port, opts \\ []) do
     opts = [hostname: host, port: port] ++ opts
-    DBConnection.start_link(__MODULE__, opts)
+    DBConnLegacy.start_link(__MODULE__, opts)
   end
 
   def send(conn, data) do
-    case DBConnection.execute(conn, %Query{query: :send}, data) do
+    case DBConnLegacy.execute(conn, %Query{query: :send}, data) do
       {:ok, :ok}        -> :ok
       {:error, _} = err -> err
     end
   end
 
   def recv(conn, bytes, timeout \\ 3000) do
-    DBConnection.execute(conn, %Query{query: :recv}, [bytes, timeout])
+    DBConnLegacy.execute(conn, %Query{query: :recv}, [bytes, timeout])
   end
 
   def run(conn, fun, opts \\ []) when is_function(fun, 1) do
-    DBConnection.run(conn, fun, opts)
+    DBConnLegacy.run(conn, fun, opts)
   end
 
   def connect(opts) do
@@ -73,7 +73,7 @@ defmodule TCPConnection do
     # buffer and to handle error/closed messages. It is not required for
     # the socket to be in active mode when checked in as `:idle_timeout`
     # can be used to ping the database with `ping/1`. However it means that
-    # noticing connection loss might be delayed. `DBConnection.Sojourn`
+    # noticing connection loss might be delayed. `DBConnLegacy.Sojourn`
     # relies on this feature as the state is immediately checked out to the
     # broker.
     case :inet.setopts(sock, [active: :once]) do
@@ -96,7 +96,7 @@ defmodule TCPConnection do
 
   def handle_execute(%Query{query: :recv}, [bytes, timeout], _, {sock, <<>>} = state) do
     # The simplest case when there is no buffer. This callback is called
-    # in the process that called DBConnection.execute/4 so has
+    # in the process that called DBConnLegacy.execute/4 so has
     # to block until there is a result or error. `active: :once` can't
     # be used.
     case :gen_tcp.recv(sock, bytes, timeout) do
@@ -186,7 +186,7 @@ defmodule TCPConnection do
   end
 end
 
-defimpl DBConnection.Query, for: TCPConnection.Query do
+defimpl DBConnLegacy.Query, for: TCPConnection.Query do
 
   alias TCPConnection.Query
 

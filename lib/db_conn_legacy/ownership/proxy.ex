@@ -1,4 +1,4 @@
-defmodule DBConnection.Ownership.Proxy do
+defmodule DBConnLegacy.Ownership.Proxy do
   @moduledoc false
 
   use GenServer
@@ -52,7 +52,7 @@ defmodule DBConnection.Ownership.Proxy do
   # Callbacks
 
   def init({_manager, caller, pool, pool_opts}) do
-    pool_mod = Keyword.get(pool_opts, :ownership_pool, DBConnection.Poolboy)
+    pool_mod = Keyword.get(pool_opts, :ownership_pool, DBConnLegacy.Poolboy)
     pool_opts = Keyword.put(pool_opts, :timeout, :infinity)
 
     owner_ref = Process.monitor(caller)
@@ -110,7 +110,7 @@ defmodule DBConnection.Ownership.Proxy do
       kind, reason ->
         stack = System.stacktrace()
         msg = "failed to checkout using " <> inspect(pool_mod)
-        err = DBConnection.ConnectionError.exception(msg)
+        err = DBConnLegacy.ConnectionError.exception(msg)
         GenServer.reply(from, {:error, err})
         :erlang.raise(kind, reason, stack)
     else
@@ -139,7 +139,7 @@ defmodule DBConnection.Ownership.Proxy do
       {:noreply, %{state | queue: queue}}
     else
       message = "connection not available and queuing is disabled"
-      err = DBConnection.ConnectionError.exception(message)
+      err = DBConnLegacy.ConnectionError.exception(message)
       {:reply, {:error, err}, state}
     end
   end
@@ -244,7 +244,7 @@ defmodule DBConnection.Ownership.Proxy do
   defp down(reason, state) do
     %{pool_mod: pool_mod, pool_ref: pool_ref,
       conn_state: conn_state, pool_opts: pool_opts} = state
-    error = DBConnection.ConnectionError.exception(reason)
+    error = DBConnLegacy.ConnectionError.exception(reason)
     pool_mod.disconnect(pool_ref, error, conn_state, pool_opts)
     {:stop, {:shutdown, reason}, state}
   end
@@ -252,7 +252,7 @@ defmodule DBConnection.Ownership.Proxy do
   defp disconnect(reason, state) do
     %{conn_state: conn_state, pool_mod: pool_mod,
       pool_opts: pool_opts, pool_ref: pool_ref} = state
-    error = DBConnection.ConnectionError.exception(reason)
+    error = DBConnLegacy.ConnectionError.exception(reason)
     pool_mod.disconnect(pool_ref, error, conn_state, pool_opts)
     {:stop, {:shutdown, reason}, state}
   end

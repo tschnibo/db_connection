@@ -1,4 +1,4 @@
-defmodule DBConnection.Sojourn.Starter do
+defmodule DBConnLegacy.Sojourn.Starter do
   @moduledoc false
 
   use Connection
@@ -12,8 +12,8 @@ defmodule DBConnection.Sojourn.Starter do
   def connect(:init, {sup, broker, opts}) do
     size = Keyword.get(opts, :pool_size, 10)
     overflow = Keyword.get(opts, :pool_overflow, 0)
-    regulator = DBConnection.Sojourn.Pool.lookup_regulator(sup)
-    conn_sup = DBConnection.Sojourn.Pool.lookup_conn_sup(sup)
+    regulator = DBConnLegacy.Sojourn.Pool.lookup_regulator(sup)
+    conn_sup = DBConnLegacy.Sojourn.Pool.lookup_conn_sup(sup)
     %{workers: conns} = Supervisor.count_children(conn_sup)
     start_conns(size + overflow - conns, conn_sup, {broker, regulator})
   end

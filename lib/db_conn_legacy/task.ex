@@ -1,6 +1,6 @@
-defmodule DBConnection.Task do
+defmodule DBConnLegacy.Task do
   @moduledoc false
-  @behaviour DBConnection.Pool
+  @behaviour DBConnLegacy.Pool
 
   def ensure_all_started(_opts, _type) do
     {:ok, []}
@@ -11,12 +11,12 @@ defmodule DBConnection.Task do
   end
 
   def start_link(_, _) do
-    raise ArgumentError, "can not start the DBConnection.Task pool"
+    raise ArgumentError, "can not start the DBConnLegacy.Task pool"
   end
 
   def child_spec(_, _, _) do
     raise ArgumentError,
-      "can not create a child spec for the DBConnection.Task pool"
+      "can not create a child spec for the DBConnLegacy.Task pool"
   end
 
   def run_child(mod, fun, state, opts) do
@@ -39,7 +39,7 @@ defmodule DBConnection.Task do
       {:go, ^ref, mon} ->
         Process.unlink(conn)
         pool = {:via, __MODULE__, {{conn, mon}, mod, state}}
-        _ = DBConnection.run(pool, make(fun), [pool: __MODULE__] ++ opts)
+        _ = DBConnLegacy.run(pool, make(fun), [pool: __MODULE__] ++ opts)
         exit(:normal)
     end
   end
@@ -48,9 +48,9 @@ defmodule DBConnection.Task do
     {:ok, info, mod, state}
   end
 
-  defdelegate checkin(info, state, opts), to: DBConnection.Connection
-  defdelegate disconnect(info, err, state, opts), to: DBConnection.Connection
-  defdelegate stop(info, err, state, opts), to: DBConnection.Connection
+  defdelegate checkin(info, state, opts), to: DBConnLegacy.Connection
+  defdelegate disconnect(info, err, state, opts), to: DBConnLegacy.Connection
+  defdelegate stop(info, err, state, opts), to: DBConnLegacy.Connection
 
   defp make(fun) when is_function(fun, 1) do
     fun

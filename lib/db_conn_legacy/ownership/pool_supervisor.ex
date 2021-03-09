@@ -1,7 +1,7 @@
-defmodule DBConnection.Ownership.PoolSupervisor do
+defmodule DBConnLegacy.Ownership.PoolSupervisor do
   @moduledoc false
 
-  alias DBConnection.Ownership.Pool
+  alias DBConnLegacy.Ownership.Pool
   import Supervisor.Spec
 
   def start_link() do

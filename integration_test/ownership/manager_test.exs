@@ -3,7 +3,7 @@ defmodule ManagerTest do
 
   alias TestPool, as: P
   alias TestAgent, as: A
-  alias DBConnection.Ownership
+  alias DBConnLegacy.Ownership
 
   test "requires explicit checkout on manual mode" do
     {:ok, pool} = start_pool()
@@ -293,7 +293,7 @@ defmodule ManagerTest do
    end
 
   defp refute_checked_out(pool, opts \\ []) do
-    assert_raise DBConnection.OwnershipError, ~r/cannot find ownership process/, fn ->
+    assert_raise DBConnLegacy.OwnershipError, ~r/cannot find ownership process/, fn ->
       P.run(pool, fn _ -> :ok end, opts)
     end
   end

@@ -1,8 +1,8 @@
-defmodule DBConnection.Backoff do
+defmodule DBConnLegacy.Backoff do
   @moduledoc false
   @compile :nowarn_deprecated_function
 
-  alias DBConnection.Backoff
+  alias DBConnLegacy.Backoff
 
   @default_type :rand_exp
   @min          1_000

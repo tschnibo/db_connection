@@ -11,10 +11,10 @@ defmodule DbAgent.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :db_connection]]
+    [applications: [:logger, :db_conn_legacy]]
   end
 
   defp deps do
-    [{:db_connection, ">= 0.0.0", path: "../../"}]
+    [{:db_conn_legacy, ">= 0.0.0", path: "../../"}]
   end
 end

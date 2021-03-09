@@ -1,4 +1,4 @@
-defmodule DBConnection.Sojourn.Regulator do
+defmodule DBConnLegacy.Sojourn.Regulator do
   @moduledoc """
   A `:sregulator` callback module using an unlimited queue and a CoDel strategy
   for the valve.

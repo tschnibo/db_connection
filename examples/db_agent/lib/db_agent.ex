@@ -1,6 +1,6 @@
 defmodule DBAgent do
 
-  use DBConnection
+  use DBConnLegacy
 
 
   defmodule Query do
@@ -9,42 +9,42 @@ defmodule DBAgent do
 
   @spec start_link((() -> state :: any), Keyword.t) :: GenServer.on_start
   def start_link(fun, opts \\ []) when is_function(fun, 0) do
-    opts = [init: fun, pool: DBConnection.Connection, sync_connect: true,
+    opts = [init: fun, pool: DBConnLegacy.Connection, sync_connect: true,
             backoff: nil] ++ opts
-    DBConnection.start_link(__MODULE__, opts)
+    DBConnLegacy.start_link(__MODULE__, opts)
   end
 
-  @spec get(DBConnection.conn, ((state :: any) -> value), timeout) ::
+  @spec get(DBConnLegacy.conn, ((state :: any) -> value), timeout) ::
     value when value: var
   def get(conn, fun, timeout \\ 5_000) do
-    DBConnection.execute!(conn, %Query{query: :get}, fun,
+    DBConnLegacy.execute!(conn, %Query{query: :get}, fun,
       [pool_timeout: timeout])
   end
 
-  @spec update(DBConnection.conn, ((state :: any) -> new_state :: any), timeout) ::
+  @spec update(DBConnLegacy.conn, ((state :: any) -> new_state :: any), timeout) ::
     :ok
   def update(conn, fun, timeout \\ 5_000) do
-    DBConnection.execute!(conn, %Query{query: :update}, fun,
+    DBConnLegacy.execute!(conn, %Query{query: :update}, fun,
       [pool_timeout: timeout])
   end
 
-  @spec get(DBConnection.conn, ((state :: any) -> {value, new_state :: any}), timeout) ::
+  @spec get(DBConnLegacy.conn, ((state :: any) -> {value, new_state :: any}), timeout) ::
     value when value: var
   def get_and_update(conn, fun, timeout \\ 5_000) do
-    DBConnection.execute!(conn, %Query{query: :get_and_update}, fun,
+    DBConnLegacy.execute!(conn, %Query{query: :get_and_update}, fun,
       [pool_timeout: timeout])
   end
 
-  @spec transaction(DBConnection.conn, ((DBConnection.t) -> res),  timeout) ::
+  @spec transaction(DBConnLegacy.conn, ((DBConnLegacy.t) -> res),  timeout) ::
     {:ok, res} | {:error, reason :: any} when res: var
   def transaction(conn, fun, timeout \\ 5_000) when is_function(fun, 1) do
-    DBConnection.transaction(conn, fun, [pool_timeout: timeout])
+    DBConnLegacy.transaction(conn, fun, [pool_timeout: timeout])
   end
 
-  @spec rollback(DBConnection.t, reason :: any) :: no_return
-  defdelegate rollback(conn, reason), to: DBConnection
+  @spec rollback(DBConnLegacy.t, reason :: any) :: no_return
+  defdelegate rollback(conn, reason), to: DBConnLegacy
 
-  ## DBConnection API
+  ## DBConnLegacy API
 
   def connect(opts) do
     fun = Keyword.fetch!(opts, :init)
@@ -84,7 +84,7 @@ defmodule DBAgent do
   end
 end
 
-defimpl DBConnection.Query, for: DBAgent.Query do
+defimpl DBConnLegacy.Query, for: DBAgent.Query do
 
   alias DBAgent.Query
 

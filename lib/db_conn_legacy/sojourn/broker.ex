@@ -1,4 +1,4 @@
-defmodule DBConnection.Sojourn.Broker do
+defmodule DBConnLegacy.Sojourn.Broker do
   @moduledoc """
   A `:sbroker` callback module using a timeout strategy for the client queue and
   a CoDel strategy for the connection queue.
@@ -86,7 +86,7 @@ defmodule DBConnection.Sojourn.Broker do
   end
 
   defp start_pool(mod, opts) do
-    {:ok, pid} = DBConnection.Sojourn.Supervisor.start_pool(mod, opts)
+    {:ok, pid} = DBConnLegacy.Sojourn.Supervisor.start_pool(mod, opts)
     _ = Process.put(@pool, pid)
     pid
   end
@@ -96,7 +96,7 @@ defmodule DBConnection.Sojourn.Broker do
   end
 
   defp do_lookup_regulator(pool) do
-    pid = DBConnection.Sojourn.Pool.lookup_regulator(pool)
+    pid = DBConnLegacy.Sojourn.Pool.lookup_regulator(pool)
     _ = Process.put(@regulator, pid)
     pid
   end
